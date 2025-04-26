@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Movie AI Recommender</title>
+  {% load extra_filters %}
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    form {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      background-color: #e50914;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .card-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .movie-card {
+      width: 180px;
+      background-color: #111;
+      color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+    }
+
+    .movie-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 10px 16px rgba(255, 255, 255, 0.2);
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: 270px;
+      object-fit: cover;
+      border-bottom: 1px solid #444;
+    }
+
+    .movie-card .info {
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .movie-card h3 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      font-weight: bold;
+    }
+
+    .movie-card p {
+      margin: 4px 0;
+      line-height: 1.4;
+      font-size: 13px;
+      color: #ccc;
+    }
+
+    .trailer-button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      background-color: #e50914;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .trailer-button:hover {
+      background-color: #ff3c28;
+    }
+
+    .stars {
+      color: gold;
+      font-size: 16px;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Movie AI Recommender</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+    <label for="movie">Enter movie title:</label>
+    <input type="text" name="movie_title" required>
+    <button type="submit">Recommend</button>
+  </form>
+
+  {% if selected %}
+    <h2>Recommendations based on "{{ selected }}"</h2>
+
+    <div class="card-container">
+      {% for movie in recommended %}
+        <div class="movie-card">
+          {% if movie.poster_path %}
+            <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+          {% else %}
+            <img src="https://via.placeholder.com/300x450?text=No+Image" alt="No Poster">
+          {% endif %}
+          <div class="info">
+            <h3>{{ movie.title }}</h3>
+            <p><strong>Genre:</strong> {{ movie.genre }}</p>
+
+            <p><strong>Rating:</strong> 
+              {% if movie.rating %}
+                <span class="stars">
+                  {% with stars=movie.rating|floatformat:0 %}
+                    {% for i in "12345" %}
+                      {% if forloop.counter <= stars|floatdiv:2 %}
+                        ⭐
+                      {% else %}
+                        ☆
+                      {% endif %}
+                    {% endfor %}
+                  {% endwith %}
+                </span> ({{ movie.rating }})
+              {% else %}
+                N/A
+              {% endif %}
+            </p>
+
+            <p><strong>Year:</strong> {{ movie.year }}</p>
+            <p>{{ movie.description|truncatechars:100 }}</p>
+
+            <a class="trailer-button" target="_blank"
+               href="https://www.youtube.com/results?search_query={{ movie.title|urlencode }}+official+trailer">
+              🎬 Watch Trailer
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% elif message %}
+    <p class="message">{{ message }}</p>
+  {% endif %}
+
+</body>
+</html>
